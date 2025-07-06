@@ -11,6 +11,7 @@ https://github.com/qimbet/hydroponics
 This should include CAD files for all 3d printed parts (e.g. pvc mounts, strut attachments)
 A full BOM is not yet developed, but should also be included lol
 
+Small text appendment to test github password reset
 *********************************************************************************/
 
 #include <Arduino.h>
