@@ -41,13 +41,33 @@ const char* ntpServer = "pool.ntp.org";
 
 *********************************************************************************/
 
+/*********************************************
+Grow Light
+**********************************************/
 const int lightOnHours = 9; // Hours the grow light should be ON per day
-const int sleepStartHour = 22; // 10 PM
-const int sleepEndHour = 10;  // 10 AM
+const int growLightStart = 10;  // 10 AM
+const int growLightShutoff = 22; // 10 PM
 
+/*********************************************
+Watering Pump
+**********************************************/
+const int wateringTime = 15; //3 pm
 
+const int reservoirMaxFillTime = 1.5*minutesInMilliseconds; 
 
-const int reconnectTime = 60*60*3; // If many wifi connection issues occur, wait 3 hours before trying to reconnect
+/*********************************************
+Fertilizer
+**********************************************/
+const int fertilizeTime = 15; //3pm, ensure that fertilizer is pumped prior to water (ensures mixing)
+const int fertilizeDay = 0; //Sunday
+
+const int fertilizeTimer = 2*secondsInMilliseconds;
+
+/*********************************************
+Wifi
+**********************************************/
+const int reconnectTime = 60*30; // If many wifi connection issues occur, wait 30 minutes before trying to reconnect
+
 
 /*********************************************************************************
  
@@ -55,20 +75,20 @@ const int reconnectTime = 60*60*3; // If many wifi connection issues occur, wait
 
 *********************************************************************************/
 
-
-const int minutesInMilliseconds = 1000*60; 
-const int secondsInMilliseconds = 1000; 
+//System variables
+bool minorError = false;  //error code 1
+bool majorError = false;  // error code 2
 unsigned long fillTimerStart = 0;
 unsigned long elapsedTime = 0;
 
-//These all need to be calibrated experimentally
-const int fertilizeTimer = 1.5*secondsInMilliseconds;
-const int fillTimeMax = 1.5*minutesInMilliseconds; //It shouldn't take longer than 1.5 minutes to fill the reservoir
+int wateringStatus = 0; 
+int fertilizerStatus = 0;
+int lightStatus = 0;
 
-const int drainTime = 10*minutesInMilliseconds;
 
-bool minorError = false;
-bool majorError = false;
+//Universal constants
+const int minutesInMilliseconds = 1000*60; 
+const int secondsInMilliseconds = 1000; 
 
 /*********************************************************************************
  
@@ -113,27 +133,52 @@ void setup() {
                               Function Definitions
 
 *********************************************************************************/
-
-void waterPlants(){
-  digitalWrite(MAIN_PUMP_PIN, HIGH);
-
+bool timedSystem(int targetPin, int timeout, int errorLevel, int sensorShutoffPin=500, int sensorFlagForShutoff=HIGH){
+  digitalWrite(targetPin, HIGH);
   fillTimerStart = millis();
-  while (digitalRead(WATER_LEVEL_SENSOR) != HIGH){
-    elapsedTime = millis() - fillTimerStart;
-    if (elapsedTime > fillTimeMax) { // This is a safety mechanism to prevent overfilling. If the water level sensor doesn't tick, the pump also has a time cutoff
-      majorError = true;
-      break;
+
+  if (sensorShutoffPin != 500){
+
+    while (digitalRead(sensorShutoffPin) != sensorFlagForShutoff){
+        elapsedTime = millis() - fillTimerStart;
+
+        if (elapsedTime > timeout) { // This is a safety mechanism to prevent overfilling. If the water level sensor doesn't tick, the pump also has a time cutoff
+          if (errorLevel == 1){
+            minorError = true;
+          }
+          else if (errorLevel == 2){
+            majorError = true;
+          }
+          return false;
+
+        }
+      }
+  }
+  digitalWrite(targetPin, LOW); //sensor-triggered shutoff. Should be the standard trigger for shutoff
+  return true;
+}
+
+
+bool runOnSchedule(int scheduledHourTime, bool daily, const struct tm& t, int scheduledDayOfTheWeek=0){
+  bool runToday = true;
+  if (daily == false){
+    if (t.tm_mday != scheduledDayOfTheWeek){
+      runToday = false;
     }
   }
-  digitalWrite(MAIN_PUMP_PIN, LOW); //sensor-triggered shutoff. Should be the standard trigger for shutoff
-}
 
-void fertilize(){
-  digitalWrite(FERTILIZER_PUMP_PIN, HIGH);
-  delay(fertilizeTimer); // determined experimentally
-  digitalWrite(FERTILIZER_PUMP_PIN, LOW);
+  if (runToday == true){
+    if (scheduledHourTime > t.tm_hour){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  else{
+    return false;
+  }
 }
-
 /*********************************************************************************
  
                               Main Loop
@@ -158,31 +203,62 @@ void loop() {
       delay(500)
     }
   }
-  
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) {
+
+
+  struct tm timeinfo; //pass this as an argument 'timeinfo'
+  if (!getLocalTime(&timeinfo)) { //gets current time. Works, but should be revised
     delay(1000);
     return; 
   }
+  
+  int currentHour = timeinfo.tm_hour;   //hours since midnight
+  int currentDay = timeinfo.tm_mday;    //day of the month
+  int dayOfTheWeek = timeinfo.tm_wday;  //days since sunday; [0-6]
 
-  int currentHour = timeinfo.tm_hour;
 
+  delay(15*secondsInMilliseconds); //slows down loop, but locks out interaction. Problematics with errorFlags & reset button
 
+  
+  
+  
 
+  /*******************************************************************************************
+  Controls Grow Light
+  *******************************************************************************************/
   bool lightOn = false;
-  if (currentHour >= sleepEndHour && currentHour < sleepStartHour) {
+  if (currentHour >= growLightStart && currentHour < growLightShutoff) {
+    int lightOnEnd = growLightStart + lightOnHours; // Calculate end time
 
-    int lightOnStart = sleepEndHour; // 10 AM
-    int lightOnEnd = lightOnStart + lightOnHours; // Calculate end time
-
-    if (currentHour >= lightOnStart && currentHour < lightOnEnd) {
+    if (currentHour < lightOnEnd) {
       lightOn = true;
+    }
+ 
+  }
+  digitalWrite(GROW_LIGHT_PIN, lightOn ? HIGH : LOW);
+
+  /*******************************************************************************************
+  Controls Watering Pump
+  *******************************************************************************************/
+  //wateringTime
+  bool wateredToday = false;
+
+  if (wateredToday == false){
+    if(runOnSchedule(wateringTime, true, timeinfo)){  
+      wateredToday = timedSystem(MAIN_PUMP_PIN, reservoirMaxFillTime, 2, WATER_LEVEL_SENSOR, HIGH);
     }
   }
 
-  digitalWrite(GROW_LIGHT_PIN, lightOn ? HIGH : LOW);
-  delay(60000);
+  /*******************************************************************************************
+  Controls Fertilizer
+  *******************************************************************************************/
+  //fertilizeTime
+  //fertilizeDay
+  bool fertilizedToday = false;
 
-
-
+  if (fertilizedToday == false){
+    if (runOnSchedule(fertilizeTime, false, timeinfo, fertilizeDay)){
+      fertilizedToday = timedSystem(FERTILIZER_PUMP_PIN, fertilizeTime, 1);
+    }
+    
+  }
 }
