@@ -87,9 +87,6 @@ Wifi
 **********************************************/
 const int reconnectTime = 60*30; // If many wifi connection issues occur, wait 30 minutes before trying to reconnect
 
-
-
-
 /*********************************************************************************
  
                               Setup
@@ -153,7 +150,6 @@ bool timedSystem(int targetPin, int timeout, int errorLevel, int sensorShutoffPi
   return true;
 }
 
-
 bool runOnSchedule(int scheduledHourTime, bool daily, const struct tm& t, int scheduledDayOfTheWeek=0){
   bool runToday = true;
   if (daily == false){
@@ -211,9 +207,6 @@ void loop() {
 
   delay(15*secondsInMilliseconds); //slows down loop, but locks out interaction. Problematics with errorFlags & reset button
 
-  
-  
-  
 
   /*******************************************************************************************
   Controls Grow Light
