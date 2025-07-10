@@ -23,52 +23,15 @@ Small text appendment to test github password reset
 
 #define FERTILIZER_PUMP_PIN 25
 #define MAIN_PUMP_PIN 12
-#define SUMP_DRAIN_FILTER_SOLENOID 4
 #define WATER_LEVEL_SENSOR 32
-#define TESTPINHIGH 26
 
-#define minorErrorLight 1
-#define majorErrorLight 2
+#define minorErrorLight 34
+#define majorErrorLight 35
 
 
 const long gmtOffset_sec = -28800;      // Adjust for your timezone (e.g., -28800 for PST)
 const int daylightOffset_sec = 3600/2; // Adjust for daylight saving time if applicable
 const char* ntpServer = "pool.ntp.org";
-
-
-/*********************************************************************************
- 
-                              System Scheduling
-
-*********************************************************************************/
-
-/*********************************************
-Grow Light
-**********************************************/
-const int lightOnHours = 9; // Hours the grow light should be ON per day
-const int growLightStart = 10;  // 10 AM
-const int growLightShutoff = 22; // 10 PM
-
-/*********************************************
-Watering Pump
-**********************************************/
-const int wateringTime = 15; //3 pm
-
-const int reservoirMaxFillTime = 1.5*minutesInMilliseconds; 
-
-/*********************************************
-Fertilizer
-**********************************************/
-const int fertilizeTime = 15; //3pm, ensure that fertilizer is pumped prior to water (ensures mixing)
-const int fertilizeDay = 0; //Sunday
-
-const int fertilizeTimer = 2*secondsInMilliseconds;
-
-/*********************************************
-Wifi
-**********************************************/
-const int reconnectTime = 60*30; // If many wifi connection issues occur, wait 30 minutes before trying to reconnect
-
 
 /*********************************************************************************
  
@@ -93,6 +56,42 @@ const int secondsInMilliseconds = 1000;
 
 /*********************************************************************************
  
+                              System Scheduling
+
+*********************************************************************************/
+
+/*********************************************
+Grow Light
+**********************************************/
+const int lightOnHours = 9; // Hours the grow light should be ON per day
+const int growLightStart = 10;  // 10 AM
+const int growLightShutoff = 22; // 10 PM
+
+/*********************************************
+Watering Pump
+**********************************************/
+const int wateringTime = 15; //3 pm
+
+const unsigned long reservoirMaxFillTime = 1.5*minutesInMilliseconds; 
+
+/*********************************************
+Fertilizer
+**********************************************/
+const int fertilizeTime = 15; //3pm, ensure that fertilizer is pumped prior to water (ensures mixing)
+const int fertilizeDay = 0; //Sunday
+
+const unsigned long fertilizeTimer = 2*secondsInMilliseconds;
+
+/*********************************************
+Wifi
+**********************************************/
+const int reconnectTime = 60*30; // If many wifi connection issues occur, wait 30 minutes before trying to reconnect
+
+
+
+
+/*********************************************************************************
+ 
                               Setup
 
 *********************************************************************************/
@@ -101,16 +100,11 @@ void setup() {
   pinMode(GROW_LIGHT_PIN,                   OUTPUT);
   pinMode(FERTILIZER_PUMP_PIN,              OUTPUT);
   pinMode(MAIN_PUMP_PIN,                    OUTPUT);
-  pinMode(SUMP_DRAIN_FILTER_SOLENOID,       OUTPUT);
-  pinMode(TESTPINHIGH,                      OUTPUT);
   pinMode(WATER_LEVEL_SENSOR,               INPUT);
 
   digitalWrite(GROW_LIGHT_PIN,              LOW); 
   digitalWrite(FERTILIZER_PUMP_PIN,         LOW); 
   digitalWrite(MAIN_PUMP_PIN,               LOW); 
-  digitalWrite(SUMP_DRAIN_FILTER_SOLENOID,  LOW); 
-  digitalWrite(TESTPINHIGH,                 HIGH);
-
 
   // Connect to WiFi 
   WiFi.begin(WIFI_SSID, WIFI_PW); //Admittedly it's kind of whack for this to be wifi-connected, but idc anymore
@@ -194,14 +188,12 @@ void loop() {
     digitalWrite(GROW_LIGHT_PIN,              LOW); //reset all pins to default
     digitalWrite(FERTILIZER_PUMP_PIN,         LOW); 
     digitalWrite(MAIN_PUMP_PIN,               LOW); 
-    digitalWrite(SUMP_DRAIN_FILTER_SOLENOID,  LOW); 
-    digitalWrite(TESTPINHIGH,                 HIGH);
 
     while (true){ //Endless loop, stops all hardware from running
       digitalWrite(majorErrorLight, HIGH);
       delay(500);
       digitalWrite(majorErrorLight, LOW);
-      delay(500)
+      delay(500);
     }
   }
 
