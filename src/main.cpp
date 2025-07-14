@@ -19,13 +19,14 @@ Small text appendment to test github password reset
 #include "time.h"
 #include "pw.h"
 
+#define outputHigh 12
+
 #define GROW_LIGHT_PIN 27 // Replace with your pin connected to the relay
 
 #define FERTILIZER_PUMP_PIN 25
-#define MAIN_PUMP_PIN 12
+#define MAIN_PUMP_PIN 14
 #define WATER_LEVEL_SENSOR 32
-#define drainSolenoid 100
-#define outputHigh 101
+#define drainSolenoid 33
 
 #define minorErrorLight 34
 #define majorErrorLight 35
@@ -237,7 +238,7 @@ void loop() {
   if (wateredToday == false){
     if(runOnSchedule(wateringTime, true, timeinfo)){  
       wateredToday = timedSystem(MAIN_PUMP_PIN, reservoirMaxFillTime, 2, WATER_LEVEL_SENSOR, HIGH);
-      timedSystem(drainSolenoid, pipeFlushTime, 1)
+      timedSystem(drainSolenoid, pipeFlushTime, 1);
     }
   }
 

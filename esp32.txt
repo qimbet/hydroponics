@@ -1,0 +1,14 @@
+https://www.aliexpress.com/item/1005008513246359.html
+
+available pinouts:
+
+12 - Output High
+14 - Main Pump
+27 - Grow Light
+26
+25 - Fertilizer Pump
+33 - Drain Solenoid
+32 - Water Level Sensor
+35 - Major error light
+34 - Minor error light
+
