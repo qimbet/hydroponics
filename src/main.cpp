@@ -24,6 +24,8 @@ Small text appendment to test github password reset
 #define FERTILIZER_PUMP_PIN 25
 #define MAIN_PUMP_PIN 12
 #define WATER_LEVEL_SENSOR 32
+#define drainSolenoid 100
+#define outputHigh 101
 
 #define minorErrorLight 34
 #define majorErrorLight 35
@@ -73,6 +75,7 @@ Watering Pump
 const int wateringTime = 15; //3 pm
 
 const unsigned long reservoirMaxFillTime = 1.5*minutesInMilliseconds; 
+const unsigned long pipeFlushTime = 0.5*minutesInMilliseconds;
 
 /*********************************************
 Fertilizer
@@ -97,11 +100,15 @@ void setup() {
   pinMode(GROW_LIGHT_PIN,                   OUTPUT);
   pinMode(FERTILIZER_PUMP_PIN,              OUTPUT);
   pinMode(MAIN_PUMP_PIN,                    OUTPUT);
+  pinMode(drainSolenoid,                    OUTPUT);
+  pinMode(outputHigh,                       OUTPUT);
   pinMode(WATER_LEVEL_SENSOR,               INPUT);
 
   digitalWrite(GROW_LIGHT_PIN,              LOW); 
   digitalWrite(FERTILIZER_PUMP_PIN,         LOW); 
   digitalWrite(MAIN_PUMP_PIN,               LOW); 
+  digitalWrite(drainSolenoid,               LOW);
+  digitalWrite(outputHigh,                  HIGH);
 
   // Connect to WiFi 
   WiFi.begin(WIFI_SSID, WIFI_PW); //Admittedly it's kind of whack for this to be wifi-connected, but idc anymore
@@ -193,7 +200,6 @@ void loop() {
     }
   }
 
-
   struct tm timeinfo; //pass this as an argument 'timeinfo'
   if (!getLocalTime(&timeinfo)) { //gets current time. Works, but should be revised
     delay(1000);
@@ -231,6 +237,7 @@ void loop() {
   if (wateredToday == false){
     if(runOnSchedule(wateringTime, true, timeinfo)){  
       wateredToday = timedSystem(MAIN_PUMP_PIN, reservoirMaxFillTime, 2, WATER_LEVEL_SENSOR, HIGH);
+      timedSystem(drainSolenoid, pipeFlushTime, 1)
     }
   }
 
