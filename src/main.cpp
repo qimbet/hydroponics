@@ -11,7 +11,6 @@ https://github.com/qimbet/hydroponics
 This should include CAD files for all 3d printed parts (e.g. pvc mounts, strut attachments)
 A full BOM is not yet developed, but should also be included lol
 
-Small text appendment to test github password reset
 *********************************************************************************/
 
 #include <Arduino.h>
@@ -66,8 +65,8 @@ const int secondsInMilliseconds = 1000;
 /*********************************************
 Grow Light
 **********************************************/
-const int lightOnHours = 9; // Hours the grow light should be ON per day
-const int growLightStart = 10;  // 10 AM
+const int lightOnHours = 14; // Hours the grow light should be ON per day
+const int growLightStart = 8;  // 8 AM
 const int growLightShutoff = 22; // 10 PM
 
 /*********************************************
