@@ -8,8 +8,7 @@ Hydroponics system; controlled by esp32
 Schematics available on github: 
 https://github.com/qimbet/hydroponics
 
-This should include CAD files for all 3d printed parts (e.g. pvc mounts, strut attachments)
-A full BOM is not yet developed, but should also be included lol
+This includes CAD files for all 3d printed parts (e.g. pvc mounts, strut attachments)
 
 *********************************************************************************/
 
@@ -31,7 +30,7 @@ A full BOM is not yet developed, but should also be included lol
 #define majorErrorLight 35
 
 
-const long gmtOffset_sec = -28800;      // Adjust for your timezone (e.g., -28800 for PST)
+const long gmtOffset_sec = -8*60*60;      // PST in seconds offset
 const int daylightOffset_sec = 3600/2; // Adjust for daylight saving time if applicable
 const char* ntpServer = "pool.ntp.org";
 
@@ -80,7 +79,7 @@ const unsigned long pipeFlushTime = 0.5*minutesInMilliseconds;
 /*********************************************
 Fertilizer
 **********************************************/
-const int fertilizeTime = 15; //3pm, ensure that fertilizer is pumped prior to water (ensures mixing)
+const int fertilizeTime = 14; //3pm, ensure that fertilizer is pumped prior to water (ensures mixing)
 const int fertilizeDay = 0; //Sunday
 
 const unsigned long fertilizeTimer = 2*secondsInMilliseconds;
@@ -132,16 +131,15 @@ void setup() {
                               Function Definitions
 
 *********************************************************************************/
-bool timedSystem(int targetPin, int timeout, int errorLevel, int sensorShutoffPin=500, int sensorFlagForShutoff=HIGH){
+bool timedSystem(int targetPin, int timeout, int errorLevel=2, int sensorShutoffPin=500, int sensorFlagForShutoff=HIGH){
   digitalWrite(targetPin, HIGH);
   fillTimerStart = millis();
 
-  if (sensorShutoffPin != 500){
-
+  if (sensorShutoffPin != 500){ //500 is an dummy value -- a placeholder for board pin number
     while (digitalRead(sensorShutoffPin) != sensorFlagForShutoff){
         elapsedTime = millis() - fillTimerStart;
 
-        if (elapsedTime > timeout) { // This is a safety mechanism to prevent overfilling. If the water level sensor doesn't tick, the pump also has a time cutoff
+        if (elapsedTime > timeout) { // This is a safety mechanism. If the sensor doesn't tick, the active pin has a time cutoff
           if (errorLevel == 1){
             minorError = true;
           }
@@ -149,10 +147,10 @@ bool timedSystem(int targetPin, int timeout, int errorLevel, int sensorShutoffPi
             majorError = true;
           }
           return false;
-
         }
       }
   }
+
   digitalWrite(targetPin, LOW); //sensor-triggered shutoff. Should be the standard trigger for shutoff
   return true;
 }
@@ -188,7 +186,7 @@ void loop() {
     digitalWrite(minorErrorLight, HIGH); 
   }
   if (majorError == true){ //resets all pinouts to initVals, halts operation. Warning light blinks
-    digitalWrite(GROW_LIGHT_PIN,              LOW); //reset all pins to default
+    digitalWrite(GROW_LIGHT_PIN,              LOW); //stop operation
     digitalWrite(FERTILIZER_PUMP_PIN,         LOW); 
     digitalWrite(MAIN_PUMP_PIN,               LOW); 
 
@@ -211,13 +209,13 @@ void loop() {
   int dayOfTheWeek = timeinfo.tm_wday;  //days since sunday; [0-6]
 
 
-  delay(15*secondsInMilliseconds); //slows down loop, but locks out interaction. Problematics with errorFlags & reset button
+  delay(7*secondsInMilliseconds); //slows down loop, but locks out interaction. Problematics with errorFlags & reset button
 
 
   /*******************************************************************************************
   Controls Grow Light
   *******************************************************************************************/
-  bool lightOn = false;
+  bool lightOn = false; //messy. lightOn should be defined earlier, toggled off/on on state changes
   if (currentHour >= growLightStart && currentHour < growLightShutoff) {
     int lightOnEnd = growLightStart + lightOnHours; // Calculate end time
 
