@@ -1,0 +1,16 @@
+This project is built to scale, so some of the code functions are not implemented in the hardware. 
+In particular, I am reffering to the error lights.
+
+Some features in the 'sketches' folder are redundant:
+  - A healthy plant can control the bio cultures of its root space, and therefore we do not need to use sterile water. 
+    The sump/filter mechanism was thus removed.
+  
+  - The drain pipe from the mixing tank is narrow (1/4" OD), and drains much slower than the fill pump.
+    The drain-control solenoid was thus removed, and replaced with a manual butterfly valve for ease of maintenance.
+    Flow valves just prior to the grow troughs are redundant in an ideal case, but uneven water flow due to system setup keeps them useful.
+
+  - The PVC used as a growing trough causes a few challenges when replacing plants: their roots grow wide, and can entangle + clog up the pipes.    
+    The growing container will in the future best be more like a flooded plain than a drainpipe; this also encourages even water distribution across upstream/downstream plants.
+    This will require a redesign of the holder mechanisms; see also: "sketches/schematics/framing and mounts.jpg"
+
+    
