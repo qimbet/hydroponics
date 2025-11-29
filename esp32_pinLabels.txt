@@ -1,6 +1,6 @@
 https://www.aliexpress.com/item/1005008513246359.html
 
-available pinouts:
+Pin definitions:
 
 12 - Output High
 14 - Main Pump
@@ -11,4 +11,6 @@ available pinouts:
 32 - Water Level Sensor
 35 - Major error light
 34 - Minor error light
+
+
 
