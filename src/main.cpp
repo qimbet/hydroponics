@@ -8,7 +8,7 @@ Hydroponics system; controlled by esp32
 Schematics available on github: 
 https://github.com/qimbet/hydroponics
 
-This includes CAD files for all 3d printed parts (e.g. pvc mounts, strut attachments)
+The repository includes CAD files for all 3d printed parts (e.g. pvc mounts, strut attachments)
 
 *********************************************************************************/
 
@@ -17,9 +17,10 @@ This includes CAD files for all 3d printed parts (e.g. pvc mounts, strut attachm
 #include "time.h"
 #include "pw.h"
 
+//Pin outputs on the board. Important that this matches ./../esp32_pinLabels.txt
 #define outputHigh 12
 
-#define GROW_LIGHT_PIN 27 // Replace with your pin connected to the relay
+#define GROW_LIGHT_PIN 27 
 
 #define FERTILIZER_PUMP_PIN 25
 #define MAIN_PUMP_PIN 14
@@ -41,7 +42,7 @@ const char* ntpServer = "pool.ntp.org";
 *********************************************************************************/
 
 //System variables
-bool minorError = false;  //error code 1
+bool minorError = false;  //error code 1 
 bool majorError = false;  // error code 2
 unsigned long fillTimerStart = 0;
 unsigned long elapsedTime = 0;
@@ -131,6 +132,9 @@ void setup() {
                               Function Definitions
 
 *********************************************************************************/
+
+// hold targetPin high for timeout time. 
+// Additional args: error level if fail, sensor pin (i.e. water level sensor), sensor state causing shutoff
 bool timedSystem(int targetPin, int timeout, int errorLevel=2, int sensorShutoffPin=500, int sensorFlagForShutoff=HIGH){
   digitalWrite(targetPin, HIGH);
   fillTimerStart = millis();
@@ -155,6 +159,7 @@ bool timedSystem(int targetPin, int timeout, int errorLevel=2, int sensorShutoff
   return true;
 }
 
+// Schedule handling
 bool runOnSchedule(int scheduledHourTime, bool daily, const struct tm& t, int scheduledDayOfTheWeek=0){
   bool runToday = true;
   if (daily == false){
@@ -185,12 +190,12 @@ void loop() {
   if (minorError == true){//Turns on flag light
     digitalWrite(minorErrorLight, HIGH); 
   }
-  if (majorError == true){ //resets all pinouts to initVals, halts operation. Warning light blinks
+  if (majorError == true){ //MAJOR ERROR: resets all pinouts to initVals, halts operation.
     digitalWrite(GROW_LIGHT_PIN,              LOW); //stop operation
     digitalWrite(FERTILIZER_PUMP_PIN,         LOW); 
     digitalWrite(MAIN_PUMP_PIN,               LOW); 
 
-    while (true){ //Endless loop, stops all hardware from running
+    while (true){ //Endless loop, stops all hardware from running. Blinks light.
       digitalWrite(majorErrorLight, HIGH);
       delay(500);
       digitalWrite(majorErrorLight, LOW);
@@ -209,7 +214,7 @@ void loop() {
   int dayOfTheWeek = timeinfo.tm_wday;  //days since sunday; [0-6]
 
 
-  delay(7*secondsInMilliseconds); //slows down loop, but locks out interaction. Problematics with errorFlags & reset button
+  delay(3*secondsInMilliseconds); //slows down loop to be nice to hardware, but locks out interaction. Problematics with errorFlags
 
 
   /*******************************************************************************************
