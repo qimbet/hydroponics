@@ -65,9 +65,9 @@ const int secondsInMilliseconds = 1000;
 /*********************************************
 Grow Light
 **********************************************/
-const int lightOnHours = 14; // Hours the grow light should be ON per day
-const int growLightStart = 8;  // 8 AM
-const int growLightShutoff = 22; // 10 PM
+const int lightOnHours = 14; // Target hours that the grow light should be ON per day
+const int growLightStart = 8;  // 8 AM      -- light start time 
+const int growLightShutoff = 22; // 10 PM   -- light shutoff. This overrides lightOnHours if there is overlap
 
 /*********************************************
 Watering Pump
@@ -111,7 +111,7 @@ void setup() {
   digitalWrite(outputHigh,                  HIGH);
 
   // Connect to WiFi 
-  WiFi.begin(WIFI_SSID, WIFI_PW); //Admittedly it's kind of whack for this to be wifi-connected, but idc anymore
+  WiFi.begin(WIFI_SSID, WIFI_PW); //Admittedly it's kind of whack for this to be wifi-connected, but it's 2026 and idc anymore
   int count = 1;
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -138,25 +138,38 @@ void setup() {
 bool timedSystem(int targetPin, int timeout, int errorLevel=2, int sensorShutoffPin=500, int sensorFlagForShutoff=HIGH){
   digitalWrite(targetPin, HIGH);
   fillTimerStart = millis();
+  unsigned long elapsedTime = 0;
 
-  if (sensorShutoffPin != 500){ //500 is an dummy value -- a placeholder for board pin number
+  if (sensorShutoffPin != 500){ //500 is an unused dummy value -- a placeholder for board pin number
     while (digitalRead(sensorShutoffPin) != sensorFlagForShutoff){
         elapsedTime = millis() - fillTimerStart;
-
-        if (elapsedTime > timeout) { // This is a safety mechanism. If the sensor doesn't tick, the active pin has a time cutoff
+        if (elapsedTime >= timeout) { // This is a safety mechanism. If the sensor doesn't tick, the active pin has a time cutoff
           if (errorLevel == 1){
+            digitalWrite(targetPin, LOW);
             minorError = true;
           }
           else if (errorLevel == 2){
+            digitalWrite(targetPin, LOW);
             majorError = true;
           }
           return false;
         }
       }
+    digitalWrite(targetPin, LOW); //sensor-triggered shutoff. ideal
+    return true;
   }
 
-  digitalWrite(targetPin, LOW); //sensor-triggered shutoff. Should be the standard trigger for shutoff
-  return true;
+  else{ //default operation; no shutoff/override sensor
+    while (elapsedTime < timeout) {
+      elapsedTime = millis() - fillTimerStart;
+      delay(25);
+      }
+
+    digitalWrite(targetPin, LOW); //timeout
+    return true;
+    }
+  
+  return false;
 }
 
 // Schedule handling
